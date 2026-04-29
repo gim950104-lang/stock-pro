@@ -15,10 +15,9 @@ export default function Home() {
     if (!query) return;
     setLoading(true);
     try {
-      const newsApiKey = process.env.NEXT_PUBLIC_NEWS_API_KEY;
-      const newsRes = await fetch(
-        `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&language=ko&apiKey=${newsApiKey}`
-      );
+      // [수정 포인트] 외부 API가 아닌 우리가 만든 내부 API(/api/news)를 호출합니다.
+      // 이렇게 하면 Vercel 서버가 대신 뉴스를 가져오기 때문에 도메인 차단을 피할 수 있습니다.
+      const newsRes = await fetch(`/api/news?query=${encodeURIComponent(query)}`);
       const newsData = await newsRes.json();
       setNews(newsData.articles?.slice(0, 6) || []);
 
