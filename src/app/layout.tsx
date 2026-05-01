@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +28,27 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#0A0B0E] text-white">
+        {/* 헤더 영역: 로고 및 로그인 버튼 */}
+        <header className="flex justify-between items-center px-8 py-4 border-b border-gray-800">
+          <div className="text-2xl font-black tracking-wider text-white">
+            STOCKDATA <span className="text-blue-500">PRO</span>
+          </div>
+          <nav className="flex items-center gap-6">
+            <Link 
+              href="/login" 
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all shadow-md shadow-blue-900/30"
+            >
+              로그인
+            </Link>
+          </nav>
+        </header>
+
+        {/* 메인 컨텐츠 영역 */}
+        <main className="flex-1">
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
