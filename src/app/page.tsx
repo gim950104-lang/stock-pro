@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Newspaper, Bell, ExternalLink, RefreshCcw, Zap, User, Lightbulb } from "lucide-react";
+import { Newspaper, Bell, ExternalLink, RefreshCcw, Zap, User, Lightbulb, Search, Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
-import { SignInButton, useClerk } from "@clerk/nextjs";
 
 // --- [반도체 기술 키워드 하이라이트] ---
 const SEMI_KEYWORDS = ["HBM", "EUV", "파운드리", "TSV", "CXL", "노광", "식각", "증착", "ALD", "유리기판", "전공정", "후공정"];
@@ -42,20 +41,21 @@ const DartSkeleton = () => (
 );
 
 export default function Home() {
-  const { openSignIn } = useClerk();
-
   const [supabase] = useState(() => createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   ));
 
-  const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("반도체");
   const [news, setNews] = useState([]);
   const [disclosures, setDisclosures] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [mounted, setMounted] = useState(false);
+  
+  // 상태: 검색어 및 즐겨찾기(북마크)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [savedItems, setSavedItems] = useState<any[]>([]);
 
   // --- [데이터 기반 실시간 요약 엔진] ---
   const aiAnalysis = useMemo(() => {
@@ -74,17 +74,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getUser();
-  }, [supabase]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-  };
+  }, []);
 
   const fetchAllData = useCallback(async (query: string) => {
     if (!query) return;
@@ -107,26 +97,46 @@ export default function Home() {
     fetchAllData(activeTab);
   }, [activeTab, fetchAllData]);
 
+  // 검색 기능 핸들러
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim() !== "") {
+      fetchAllData(searchQuery);
+    }
+  };
+
+  // 즐겨찾기 토글 기능
+  const toggleSave = (item: any) => {
+    if (savedItems.some((saved) => (saved.title === item.title) || (saved.report_nm === item.report_nm))) {
+      setSavedItems(savedItems.filter((saved) => (saved.title || saved.report_nm) !== (item.title || item.report_nm)));
+    } else {
+      setSavedItems([...savedItems, item]);
+    }
+  };
+
   if (!mounted) return null;
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white p-3 md:p-8 font-sans selection:bg-blue-500/30 relative">
 
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-end mb-4">
-          {user ? (
-            <div className="flex items-center gap-3 bg-[#151518] px-4 py-2 rounded-full border border-gray-800">
-              <span className="text-[10px] font-bold text-blue-400 flex items-center gap-2"><User size={12}/> {user.email?.split('@')[0]}님</span>
-              <button onClick={handleLogout} className="text-[10px] text-gray-500 font-black hover:text-white transition-colors uppercase">Logout</button>
-            </div>
-          ) : (
-            /* Clerk 인터럽트 모달을 바로 띄우도록 설정 */
-            <SignInButton mode="modal" fallbackRedirectUrl="/">
-              <button className="bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-full text-[11px] font-black uppercase shadow-lg shadow-blue-600/20 transition-all active:scale-95 cursor-pointer">
-                Login / Join
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            {/* 검색창 컴포넌트 */}
+            <form onSubmit={handleSearch} className="flex items-center bg-[#151518] px-3 py-1.5 rounded-full border border-gray-800">
+              <input 
+                type="text" 
+                placeholder="검색어 입력..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent text-xs text-gray-300 focus:outline-none w-32 md:w-44 px-2"
+              />
+              <button type="submit">
+                <Search size={14} className="text-gray-400 hover:text-white transition-colors" />
               </button>
-            </SignInButton>
-          )}
+            </form>
+          </div>
+          {/* 로그인 영역 완전 제거 */}
         </div>
 
         <header className="flex flex-col items-center py-6 md:py-10">
@@ -182,46 +192,96 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 px-1">
           {/* 뉴스 섹션 */}
           <section>
-            <div className="flex items-center gap-2 mb-6 border-b border-gray-800 pb-3">
-              <Newspaper size={16} className="text-blue-500" />
-              <h2 className="text-xl font-black italic uppercase tracking-tight">Main News</h2>
+            <div className="flex items-center justify-between mb-6 border-b border-gray-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Newspaper size={16} className="text-blue-500" />
+                <h2 className="text-xl font-black italic uppercase tracking-tight">Main News</h2>
+              </div>
             </div>
             <div className="space-y-4">
               {loading ? Array(4).fill(0).map((_, i) => <NewsSkeleton key={i} />) : 
-                news.map((item: any, idx) => (
-                <div key={idx} className="group bg-[#151518] p-5 rounded-2xl border border-gray-900 flex flex-col justify-between hover:border-blue-500/40 transition-all hover:-translate-y-1">
-                  <h3 className="font-bold text-sm md:text-lg leading-snug text-gray-100 group-hover:text-white transition-colors">{highlightKeywords(item.title)}</h3>
-                  <a href={item.url} target="_blank" className="text-[10px] font-black text-blue-500 mt-4 flex items-center gap-1 uppercase tracking-widest opacity-70 group-hover:opacity-100">Read Article <ExternalLink size={10} /></a>
-                </div>
-              ))}
+                news.map((item: any, idx) => {
+                const isSaved = savedItems.some(saved => saved.title === item.title);
+                return (
+                  <div key={idx} className="group bg-[#151518] p-5 rounded-2xl border border-gray-900 flex flex-col justify-between hover:border-blue-500/40 transition-all hover:-translate-y-1">
+                    <h3 className="font-bold text-sm md:text-lg leading-snug text-gray-100 group-hover:text-white transition-colors">{highlightKeywords(item.title)}</h3>
+                    <div className="flex justify-between items-center mt-4">
+                      <a href={item.url} target="_blank" className="text-[10px] font-black text-blue-500 flex items-center gap-1 uppercase tracking-widest opacity-70 group-hover:opacity-100">Read Article <ExternalLink size={10} /></a>
+                      <button onClick={() => toggleSave(item)} className="text-gray-500 hover:text-blue-400">
+                        {isSaved ? <BookmarkCheck size={16} className="text-blue-400" /> : <Bookmark size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
           {/* 공시 섹션 */}
           <section>
-            <div className="flex items-center gap-2 mb-6 border-b border-gray-800 pb-3">
-              <Bell size={16} className="text-red-500" />
-              <h2 className="text-xl font-black italic uppercase tracking-tight">Dart Alert</h2>
+            <div className="flex items-center justify-between mb-6 border-b border-gray-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Bell size={16} className="text-red-500" />
+                <h2 className="text-xl font-black italic uppercase tracking-tight">Dart Alert</h2>
+              </div>
             </div>
             <div className="space-y-4">
               {loading ? Array(4).fill(0).map((_, i) => <DartSkeleton key={i} />) : 
                 disclosures.slice(0, 8).map((item: any, idx) => {
                   const critical = isCriticalDisclosure(item.report_nm);
+                  const isSaved = savedItems.some(saved => saved.report_nm === item.report_nm);
                   return (
-                    <div key={idx} className={`bg-[#151518] p-5 rounded-2xl border-2 ${critical ? 'border-red-600/40 bg-red-600/5' : 'border-gray-900'} flex flex-col justify-between hover:border-red-500/50 transition-all`}>
+                    <div key={idx} className={`bg-[#151518] p-5 rounded-2xl border-2 ${critical ? 'border-red-600/40 bg-red-600/5' : 'border-red-600/10 bg-red-600/2'} flex flex-col justify-between hover:border-red-500/50 transition-all`}>
                       <div className="flex justify-between items-center mb-2">
-                        <span className={`text-[11px] font-black px-2 py-0.5 rounded ${critical ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'}`}>{item.corp_name}</span>
-                        <span className="text-[10px] text-gray-600 font-mono">{item.rcept_dt}</span>
+                        <span className={`text-[11px] font-black px-2 py-0.5 rounded ${critical ? 'bg-red-600 text-white' : 'bg-red-900/50 text-red-300'}`}>{item.corp_name}</span>
+                        <span className="text-[10px] text-gray-500 font-mono">{item.rcept_dt}</span>
                       </div>
-                      <h3 className={`font-bold text-xs md:text-sm mb-4 leading-relaxed ${critical ? 'text-white' : 'text-gray-400'}`}>{item.report_nm}</h3>
-                      <a href={`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${item.rcept_no}`} target="_blank" className={`text-center py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${critical ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-white/5 text-gray-500 border border-white/10 hover:bg-white/10 hover:text-gray-300'}`}>Official Report</a>
+                      <h3 className={`font-bold text-xs md:text-sm mb-4 leading-relaxed ${critical ? 'text-white' : 'text-gray-300'}`}>{item.report_nm}</h3>
+                      <div className="flex justify-between items-center gap-2">
+                        <a href={`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${item.rcept_no}`} target="_blank" className={`text-center py-2.5 rounded-xl text-[10px] font-black uppercase transition-all grow ${critical ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-red-900/20 text-red-400 border border-red-500/20 hover:bg-red-500/10'}`}>Official Report</a>
+                        <button onClick={() => toggleSave(item)} className={`p-2 rounded-xl border ${critical ? 'border-red-600/30 text-red-400' : 'border-red-500/20 text-red-400'} hover:bg-red-500/5`}>
+                          {isSaved ? <BookmarkCheck size={14} className="text-blue-400" /> : <Bookmark size={14} />}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
             </div>
           </section>
         </div>
+
+        {/* --- [즐겨찾기 섹션] --- */}
+        {savedItems.length > 0 && (
+          <section className="mt-16 px-1 border-t border-gray-900 pt-10">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black italic tracking-tight uppercase flex items-center gap-2">
+                <Bookmark size={16} className="text-blue-500" /> Saved Bookmarks
+              </h3>
+              <button onClick={() => setSavedItems([])} className="text-[10px] font-black text-gray-600 hover:text-red-500 flex items-center gap-1 uppercase transition-colors">
+                <Trash2 size={12} /> Clear All
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {savedItems.map((item, idx) => (
+                <div key={idx} className="bg-[#151518] p-5 rounded-2xl border border-gray-800 flex justify-between items-center">
+                  <div>
+                    <span className="text-[9px] font-black bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded uppercase mr-2">
+                      {item.corp_name || "뉴스"}
+                    </span>
+                    <p className="text-xs font-bold mt-2 text-gray-300">
+                      {item.title || item.report_nm}
+                    </p>
+                  </div>
+                  <button onClick={() => toggleSave(item)} className="text-gray-500 hover:text-red-500">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
+
       <footer className="text-center py-24 text-gray-800 font-black text-[10px] uppercase tracking-[0.3em]">
         Designated for Daelim Univ. Semiconductor Dept | 2026 StockData Pro
       </footer>
