@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Newspaper, Bell, ExternalLink, RefreshCcw, Zap, User, Lightbulb, Search, Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
-import { createBrowserClient } from "@supabase/ssr";
+import { Newspaper, Bell, ExternalLink, RefreshCcw, Zap, Lightbulb, Search, Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
 
 // --- [반도체 기술 키워드 하이라이트] ---
 const SEMI_KEYWORDS = ["HBM", "EUV", "파운드리", "TSV", "CXL", "노광", "식각", "증착", "ALD", "유리기판", "전공정", "후공정"];
@@ -41,11 +40,6 @@ const DartSkeleton = () => (
 );
 
 export default function Home() {
-  const [supabase] = useState(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ));
-
   const [activeTab, setActiveTab] = useState("반도체");
   const [news, setNews] = useState([]);
   const [disclosures, setDisclosures] = useState([]);
@@ -136,7 +130,6 @@ export default function Home() {
               </button>
             </form>
           </div>
-          {/* 로그인 영역 완전 제거 */}
         </div>
 
         <header className="flex flex-col items-center py-6 md:py-10">
