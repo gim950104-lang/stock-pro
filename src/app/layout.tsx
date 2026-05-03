@@ -26,37 +26,63 @@ export default function RootLayout({
   return (
     <ClerkProvider
       appearance={{
+        baseTheme: undefined,
         variables: {
           colorPrimary: "#2563eb",
           colorBackground: "#ffffff",
-          colorText: "#111827",
-          colorTextSecondary: "#6b7280",
+          colorText: "#111111",
+          colorTextSecondary: "#374151",
+          colorNeutral: "#d1d5db",
           colorInputBackground: "#ffffff",
-          colorInputText: "#111827",
-          colorNeutral: "#e5e7eb",
+          colorInputText: "#111111",
+          colorDanger: "#dc2626",
+          borderRadius: "12px",
         },
         elements: {
-          card: "bg-white border border-gray-200 shadow-2xl rounded-2xl",
-          headerTitle: "text-gray-900 text-3xl font-bold",
-          headerSubtitle: "text-gray-500",
+          /* 전체 카드 */
+          card: "bg-white border border-gray-300 shadow-2xl rounded-2xl",
+
+          /* 헤더 */
+          headerTitle: "text-black text-3xl font-extrabold",
+          headerSubtitle: "text-gray-700 font-medium",
+
+          /* 소셜 로그인 */
           socialButtonsBlockButton:
-            "bg-white border border-gray-300 hover:bg-gray-50 text-gray-900",
-          socialButtonsBlockButtonText: "text-gray-900 font-semibold",
-          socialButtonsProviderIcon: "brightness-100",
-          dividerLine: "bg-gray-200",
-          dividerText: "text-gray-400",
-          formFieldLabel: "text-gray-700 font-semibold",
+            "!bg-white !border !border-gray-300 hover:!bg-gray-100 !shadow-sm",
+          socialButtonsBlockButtonText:
+            "!text-black !font-bold !opacity-100",
+          socialButtonsProviderIcon: "!opacity-100",
+
+          /* 구분선 */
+          dividerLine: "!bg-gray-300",
+          dividerText: "!text-gray-700 !font-semibold",
+
+          /* 입력 */
+          formFieldLabel: "!text-black !font-bold",
           formFieldInput:
-            "bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300",
-          footerActionText: "text-gray-500",
-          footerActionLink: "text-blue-600 font-semibold",
+            "!bg-white !text-black placeholder:!text-gray-500 !border !border-gray-400",
+          formFieldInputShowPasswordButton: "!text-black",
+
+          /* 버튼 */
           formButtonPrimary:
-            "bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md",
-          identityPreviewText: "text-gray-900",
-          identityPreviewEditButton: "text-blue-600",
-          formResendCodeLink: "text-blue-600",
-          otpCodeFieldInput:
-            "border border-gray-300 text-gray-900 bg-white",
+            "!bg-blue-600 hover:!bg-blue-700 !text-white !font-bold",
+
+          /* footer */
+          footerActionText: "!text-gray-700 !font-medium",
+          footerActionLink: "!text-blue-600 !font-bold",
+
+          /* UserButton dropdown */
+          userButtonPopoverCard:
+            "!bg-white !border !border-gray-300 !shadow-xl",
+          userButtonPopoverActionButton:
+            "!text-black hover:!bg-gray-100",
+          userButtonPopoverActionButtonText:
+            "!text-black !font-semibold",
+          userButtonPopoverFooter: "!hidden",
+
+          /* 계정 */
+          identityPreviewText: "!text-black !font-semibold",
+          identityPreviewEditButton: "!text-blue-600 !font-bold",
         },
         layout: {
           socialButtonsPlacement: "top",
