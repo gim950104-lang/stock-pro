@@ -30,9 +30,52 @@ export default function RootLayout({
           colorPrimary: "#2563eb",
           colorBackground: "#0A0B0E",
           colorText: "#ffffff",
+          colorTextSecondary: "#d1d5db",
           colorInputBackground: "#151518",
           colorInputText: "#ffffff",
         },
+        elements: {
+          card: "bg-[#0A0B0E] border border-gray-800 shadow-2xl",
+          headerTitle: "text-white text-3xl font-bold",
+          headerSubtitle: "text-gray-300",
+          socialButtonsBlockButton:
+            "text-white border border-gray-700 bg-[#151518] hover:bg-gray-800",
+          socialButtonsBlockButtonText: "text-white font-semibold",
+          socialButtonsProviderIcon: "brightness-110",
+          formFieldLabel: "text-white font-medium",
+          formFieldInput:
+            "bg-[#151518] text-white placeholder:text-gray-400 border border-gray-700",
+          footerActionText: "text-gray-300",
+          footerActionLink: "text-blue-500 font-semibold",
+          formButtonPrimary:
+            "bg-blue-600 hover:bg-blue-700 text-white font-bold",
+          identityPreviewText: "text-white",
+          identityPreviewEditButton: "text-blue-500",
+        },
+        layout: {
+          socialButtonsPlacement: "top",
+          socialButtonsVariant: "blockButton",
+        },
+      }}
+      localization={{
+        signIn: {
+          start: {
+            title: "STOCKDATA PRO 로그인",
+            subtitle: "계속하려면 로그인하세요",
+          },
+        },
+        signUp: {
+          start: {
+            title: "STOCKDATA PRO 회원가입",
+            subtitle: "새 계정을 만들어 시작하세요",
+          },
+        },
+        socialButtonsBlockButton: "{{provider}}로 계속하기",
+        formFieldLabel__emailAddress: "이메일",
+        formFieldInputPlaceholder__emailAddress: "이메일을 입력하세요",
+        formFieldLabel__password: "비밀번호",
+        formFieldInputPlaceholder__password: "비밀번호를 입력하세요",
+        formButtonPrimary: "계속하기",
       }}
     >
       <html
