@@ -42,18 +42,19 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentQuery, setCurrentQuery] = useState("반도체");
 
   const aiAnalysis = useMemo(() => {
     const allTitles = [
-      ...news.map((n: any) => n.title),
-      ...disclosures.map((d: any) => d.report_nm),
+      ...news.map((n: any) => n.title || ""),
+      ...disclosures.map((d: any) => d.report_nm || ""),
     ].join(" ");
 
     const hotKeyword =
-      SEMI_KEYWORDS.find((kw) => allTitles.includes(kw)) || "반도체 소부장";
+      SEMI_KEYWORDS.find((kw) => allTitles.includes(kw)) || currentQuery;
 
     const criticalCount = disclosures.filter((d: any) =>
-      isCriticalDisclosure(d.report_nm)
+      isCriticalDisclosure(d.report_nm || "")
     ).length;
 
     return {
@@ -61,16 +62,16 @@ export default function Home() {
       content:
         criticalCount > 0
           ? `현재 ${hotKeyword} 분야에서 ${criticalCount}건의 주요 공시가 포착되었습니다. 대규모 공급계약이나 시설투자 여부를 리포트에서 확인하세요.`
-          : `섹터 내 뚜렷한 공시는 없으나 ${hotKeyword} 관련 뉴스 유입이 증가하고 있습니다. 기술적 반등 및 수급 변화에 유의하세요.`,
+          : `${currentQuery} 관련 뉴스 중심으로 데이터를 분석했습니다. 핵심 키워드와 시장 흐름 변화를 확인하세요.`,
     };
-  }, [news, disclosures]);
+  }, [news, disclosures, currentQuery]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const fetchAllData = useCallback(async (query: string) => {
-    if (!query) return;
+    if (!query.trim()) return;
 
     setLoading(true);
 
@@ -83,8 +84,33 @@ export default function Home() {
       const newsData = await newsRes.json();
       const dartData = await dartRes.json();
 
-      setNews(newsData.articles?.slice(0, 12) || []);
+      const normalizedQuery = query.toLowerCase();
+
+      const filteredNews =
+        newsData.articles
+          ?.filter((item: any) => {
+            const title = (item.title || "").toLowerCase();
+            const desc = (item.description || "").toLowerCase();
+
+            return (
+              title.includes(normalizedQuery) ||
+              desc.includes(normalizedQuery)
+            );
+          })
+          ?.sort((a: any, b: any) => {
+            const aTitle = (a.title || "").toLowerCase();
+            const bTitle = (b.title || "").toLowerCase();
+
+            const aScore = aTitle.includes(normalizedQuery) ? 2 : 0;
+            const bScore = bTitle.includes(normalizedQuery) ? 2 : 0;
+
+            return bScore - aScore;
+          })
+          ?.slice(0, 12) || [];
+
+      setNews(filteredNews);
       setDisclosures(dartData.list?.slice(0, 12) || []);
+      setCurrentQuery(query);
       setLastUpdated(new Date());
     } catch (err) {
       console.error(err);
@@ -97,11 +123,11 @@ export default function Home() {
     fetchAllData(activeTab);
 
     const interval = setInterval(() => {
-      fetchAllData(activeTab);
-    }, 180000); // 3분 자동 최신화
+      fetchAllData(currentQuery);
+    }, 180000);
 
     return () => clearInterval(interval);
-  }, [activeTab, fetchAllData]);
+  }, [activeTab, currentQuery, fetchAllData]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,25 +156,29 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto">
         {/* 검색 */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <form
             onSubmit={handleSearch}
             className="flex items-center bg-[#151518] px-3 py-1.5 rounded-full border border-gray-800"
           >
             <input
               type="text"
-              placeholder="검색어 입력..."
+              placeholder="회사명 / 종목명 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-xs text-gray-300 focus:outline-none w-32 md:w-44 px-2"
+              className="bg-transparent text-sm text-gray-300 focus:outline-none w-40 md:w-56 px-2"
             />
             <button type="submit">
               <Search
-                size={14}
+                size={16}
                 className="text-gray-400 hover:text-white transition-colors"
               />
             </button>
           </form>
+
+          <div className="bg-blue-600/10 border border-blue-500/20 text-blue-400 px-4 py-2 rounded-xl text-sm font-bold">
+            현재 검색: {currentQuery}
+          </div>
         </div>
 
         {/* 헤더 */}
@@ -164,7 +194,7 @@ export default function Home() {
 
           <div className="flex items-center gap-2 text-gray-600 text-[10px] font-medium mt-2">
             <RefreshCcw size={10} className={loading ? "animate-spin" : ""} />
-            실시간 업데이트 중: {lastUpdated.toLocaleTimeString()}
+            {currentQuery} 실시간 업데이트 중: {lastUpdated.toLocaleTimeString()}
           </div>
         </header>
 
@@ -179,7 +209,7 @@ export default function Home() {
               </div>
 
               <span className="text-blue-500 font-black text-xs uppercase italic tracking-widest">
-                Today&apos;s AI Briefing
+                {currentQuery} Search Result
               </span>
             </div>
 
@@ -201,7 +231,11 @@ export default function Home() {
             {["반도체", "2차전지", "AI/SW", "로봇", "자동차"].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setCurrentQuery(tab);
+                  fetchAllData(tab);
+                }}
                 className={`px-6 py-3 rounded-xl text-[11px] font-black whitespace-nowrap transition-all uppercase tracking-tighter ${
                   activeTab === tab
                     ? "bg-white text-black scale-105 shadow-xl shadow-white/5"
@@ -221,7 +255,7 @@ export default function Home() {
             <div className="flex items-center gap-3 mb-6">
               <Newspaper className="text-blue-500" />
               <h2 className="text-3xl font-black italic uppercase">
-                TECH NEWS
+                {currentQuery} NEWS
               </h2>
             </div>
 
@@ -251,7 +285,7 @@ export default function Home() {
             <div className="flex items-center gap-3 mb-6">
               <BellRing className="text-red-500" />
               <h2 className="text-3xl font-black italic uppercase">
-                DART FEED
+                {currentQuery} DART
               </h2>
             </div>
 
