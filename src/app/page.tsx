@@ -33,16 +33,19 @@ const isCriticalDisclosure = (name: string) => {
 };
 
 export default function Home() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
   const [activeTab, setActiveTab] = useState("반도체");
+  const [currentQuery, setCurrentQuery] = useState("반도체");
+
   const [news, setNews] = useState<any[]>([]);
   const [disclosures, setDisclosures] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [mounted, setMounted] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentQuery, setCurrentQuery] = useState("반도체");
 
   const aiAnalysis = useMemo(() => {
     const allTitles = [
@@ -51,7 +54,9 @@ export default function Home() {
     ].join(" ");
 
     const hotKeyword =
-      SEMI_KEYWORDS.find((kw) => allTitles.includes(kw)) || currentQuery;
+      currentQuery ||
+      SEMI_KEYWORDS.find((kw) => allTitles.includes(kw)) ||
+      "반도체 소부장";
 
     const criticalCount = disclosures.filter((d: any) =>
       isCriticalDisclosure(d.report_nm || "")
@@ -62,7 +67,7 @@ export default function Home() {
       content:
         criticalCount > 0
           ? `현재 ${hotKeyword} 분야에서 ${criticalCount}건의 주요 공시가 포착되었습니다. 대규모 공급계약이나 시설투자 여부를 리포트에서 확인하세요.`
-          : `${currentQuery} 관련 뉴스 중심으로 데이터를 분석했습니다. 핵심 키워드와 시장 흐름 변화를 확인하세요.`,
+          : `현재 ${hotKeyword} 관련 뉴스 중심으로 데이터를 분석 중입니다. 핵심 이슈 및 시장 흐름 변화를 확인하세요.`,
     };
   }, [news, disclosures, currentQuery]);
 
@@ -71,7 +76,7 @@ export default function Home() {
   }, []);
 
   const fetchAllData = useCallback(async (query: string) => {
-    if (!query.trim()) return;
+    if (!query) return;
 
     setLoading(true);
 
@@ -84,32 +89,31 @@ export default function Home() {
       const newsData = await newsRes.json();
       const dartData = await dartRes.json();
 
-      const normalizedQuery = query.toLowerCase();
+      const q = query.toLowerCase().trim();
 
+      // 검색어 포함도 높은 순으로 정렬
       const filteredNews =
         newsData.articles
           ?.filter((item: any) => {
             const title = (item.title || "").toLowerCase();
             const desc = (item.description || "").toLowerCase();
 
-            return (
-              title.includes(normalizedQuery) ||
-              desc.includes(normalizedQuery)
-            );
+            return title.includes(q) || desc.includes(q);
           })
           ?.sort((a: any, b: any) => {
             const aTitle = (a.title || "").toLowerCase();
             const bTitle = (b.title || "").toLowerCase();
 
-            const aScore = aTitle.includes(normalizedQuery) ? 2 : 0;
-            const bScore = bTitle.includes(normalizedQuery) ? 2 : 0;
+            const aExact = aTitle.includes(q) ? 1 : 0;
+            const bExact = bTitle.includes(q) ? 1 : 0;
 
-            return bScore - aScore;
+            return bExact - aExact;
           })
           ?.slice(0, 12) || [];
 
       setNews(filteredNews);
       setDisclosures(dartData.list?.slice(0, 12) || []);
+
       setCurrentQuery(query);
       setLastUpdated(new Date());
     } catch (err) {
@@ -129,15 +133,15 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [activeTab, currentQuery, fetchAllData]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (searchQuery.trim() !== "") {
-      fetchAllData(searchQuery);
-    }
+    if (!searchQuery.trim()) return;
+
+    await fetchAllData(searchQuery.trim());
   };
 
-  if (!mounted) return null;
+  if (!mounted || !isLoaded) return null;
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white p-3 md:p-8 font-sans selection:bg-blue-500/30 relative overflow-x-hidden">
@@ -145,7 +149,10 @@ export default function Home() {
       <div className="max-w-6xl mx-auto flex justify-end items-center mb-4">
         {!isSignedIn ? (
           <SignInButton mode="modal">
-            <button className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-xl font-bold text-sm">
+            <button
+              type="button"
+              className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-xl font-bold text-sm"
+            >
               로그인 / 회원가입
             </button>
           </SignInButton>
@@ -156,27 +163,32 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto">
         {/* 검색 */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="flex flex-col items-start gap-4 mb-6">
           <form
             onSubmit={handleSearch}
             className="flex items-center bg-[#151518] px-3 py-1.5 rounded-full border border-gray-800"
           >
             <input
               type="text"
-              placeholder="회사명 / 종목명 검색..."
+              placeholder="회사명 또는 키워드 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-sm text-gray-300 focus:outline-none w-40 md:w-56 px-2"
+              className="bg-transparent text-sm text-gray-300 focus:outline-none w-48 md:w-72 px-2"
             />
+
             <button type="submit">
               <Search
-                size={16}
-                className="text-gray-400 hover:text-white transition-colors"
+                size={18}
+                className={
+                  loading
+                    ? "animate-spin text-blue-500"
+                    : "text-gray-400 hover:text-white transition-colors"
+                }
               />
             </button>
           </form>
 
-          <div className="bg-blue-600/10 border border-blue-500/20 text-blue-400 px-4 py-2 rounded-xl text-sm font-bold">
+          <div className="px-4 py-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-sm font-bold">
             현재 검색: {currentQuery}
           </div>
         </div>
@@ -192,9 +204,11 @@ export default function Home() {
             STOCKDATA <span className="text-blue-500">PRO</span>
           </h1>
 
-          <div className="flex items-center gap-2 text-gray-600 text-[10px] font-medium mt-2">
-            <RefreshCcw size={10} className={loading ? "animate-spin" : ""} />
-            {currentQuery} 실시간 업데이트 중: {lastUpdated.toLocaleTimeString()}
+          <div className="flex items-center gap-2 text-gray-400 text-[11px] font-medium mt-2">
+            <RefreshCcw size={12} className={loading ? "animate-spin" : ""} />
+            {loading
+              ? `${currentQuery} 데이터 검색 중...`
+              : `실시간 업데이트: ${lastUpdated.toLocaleTimeString()}`}
           </div>
         </header>
 
@@ -209,7 +223,7 @@ export default function Home() {
               </div>
 
               <span className="text-blue-500 font-black text-xs uppercase italic tracking-widest">
-                {currentQuery} Search Result
+                Today&apos;s AI Briefing
               </span>
             </div>
 
@@ -234,7 +248,7 @@ export default function Home() {
                 onClick={() => {
                   setActiveTab(tab);
                   setCurrentQuery(tab);
-                  fetchAllData(tab);
+                  setSearchQuery("");
                 }}
                 className={`px-6 py-3 rounded-xl text-[11px] font-black whitespace-nowrap transition-all uppercase tracking-tighter ${
                   activeTab === tab
@@ -260,23 +274,27 @@ export default function Home() {
             </div>
 
             <div className="space-y-6">
-              {news.map((item, idx) => (
-                <a
-                  key={idx}
-                  href={item.url || item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-blue-500/40 hover:scale-[1.01] transition-all cursor-pointer"
-                >
-                  <h3
-                    className="font-bold text-lg leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: item.title }}
-                  />
-                  <p className="text-blue-500 text-sm mt-4">
-                    기사 전문 보기 ↗
-                  </p>
-                </a>
-              ))}
+              {news.length > 0 ? (
+                news.map((item, idx) => (
+                  <a
+                    key={idx}
+                    href={item.url || item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-blue-500/40 hover:scale-[1.01] transition-all cursor-pointer"
+                  >
+                    <h3
+                      className="font-bold text-lg leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: item.title }}
+                    />
+                    <p className="text-blue-500 text-sm mt-4">
+                      기사 전문 보기 ↗
+                    </p>
+                  </a>
+                ))
+              ) : (
+                <div className="text-gray-500">관련 뉴스 없음</div>
+              )}
             </div>
           </div>
 
@@ -285,7 +303,7 @@ export default function Home() {
             <div className="flex items-center gap-3 mb-6">
               <BellRing className="text-red-500" />
               <h2 className="text-3xl font-black italic uppercase">
-                {currentQuery} DART
+                DART FEED
               </h2>
             </div>
 
