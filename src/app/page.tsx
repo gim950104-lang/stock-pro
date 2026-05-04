@@ -9,9 +9,10 @@ import {
   Search,
   Newspaper,
   BellRing,
+  X,
 } from "lucide-react";
 
-// --- [반도체 기술 키워드] ---
+// --- [기술 키워드] ---
 const SEMI_KEYWORDS = [
   "HBM",
   "EUV",
@@ -35,8 +36,14 @@ const isCriticalDisclosure = (name: string) => {
 export default function Home() {
   const { isSignedIn, isLoaded } = useUser();
 
+  // 대표 카테고리 (UI 유지)
   const [activeTab, setActiveTab] = useState("반도체");
+
+  // 실제 현재 검색 기준
   const [currentQuery, setCurrentQuery] = useState("반도체");
+
+  // 검색 모드 여부
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   const [news, setNews] = useState<any[]>([]);
   const [disclosures, setDisclosures] = useState<any[]>([]);
@@ -56,7 +63,7 @@ export default function Home() {
     const hotKeyword =
       currentQuery ||
       SEMI_KEYWORDS.find((kw) => allTitles.includes(kw)) ||
-      "반도체 소부장";
+      "핵심 산업";
 
     const criticalCount = disclosures.filter((d: any) =>
       isCriticalDisclosure(d.report_nm || "")
@@ -66,8 +73,8 @@ export default function Home() {
       title: `${hotKeyword} 중심의 시장 흐름 포착`,
       content:
         criticalCount > 0
-          ? `현재 ${hotKeyword} 분야에서 ${criticalCount}건의 주요 공시가 포착되었습니다. 대규모 공급계약이나 시설투자 여부를 리포트에서 확인하세요.`
-          : `현재 ${hotKeyword} 관련 뉴스 중심으로 데이터를 분석 중입니다. 핵심 이슈 및 시장 흐름 변화를 확인하세요.`,
+          ? `현재 ${hotKeyword} 분야에서 ${criticalCount}건의 주요 공시가 포착되었습니다. 공급계약·시설투자 여부를 체크하세요.`
+          : `현재 ${hotKeyword} 관련 핵심 뉴스와 공시를 분석 중입니다. 주요 시장 흐름을 확인하세요.`,
     };
   }, [news, disclosures, currentQuery]);
 
@@ -75,8 +82,9 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  // 핵심 데이터 fetch
   const fetchAllData = useCallback(async (query: string) => {
-    if (!query) return;
+    if (!query.trim()) return;
 
     setLoading(true);
 
@@ -91,7 +99,6 @@ export default function Home() {
 
       const q = query.toLowerCase().trim();
 
-      // 검색어 포함도 높은 순으로 정렬
       const filteredNews =
         newsData.articles
           ?.filter((item: any) => {
@@ -114,7 +121,9 @@ export default function Home() {
       setNews(filteredNews);
       setDisclosures(dartData.list?.slice(0, 12) || []);
 
+      // 실제 검색 기준 업데이트
       setCurrentQuery(query);
+
       setLastUpdated(new Date());
     } catch (err) {
       console.error(err);
@@ -123,29 +132,58 @@ export default function Home() {
     setLoading(false);
   }, []);
 
+  // 기본 로딩 + 자동 새로고침
   useEffect(() => {
-    fetchAllData(activeTab);
+    // 검색 중이면 currentQuery 유지
+    // 아니면 activeTab 기준
+    const queryToFetch = isSearchMode ? currentQuery : activeTab;
+
+    fetchAllData(queryToFetch);
 
     const interval = setInterval(() => {
-      fetchAllData(currentQuery);
+      fetchAllData(queryToFetch);
     }, 180000);
 
     return () => clearInterval(interval);
-  }, [activeTab, currentQuery, fetchAllData]);
+  }, [activeTab, currentQuery, isSearchMode, fetchAllData]);
 
+  // 검색
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!searchQuery.trim()) return;
 
+    setIsSearchMode(true);
+
     await fetchAllData(searchQuery.trim());
+  };
+
+  // 검색 해제 → 대표 카테고리 복귀
+  const clearSearch = async () => {
+    setSearchQuery("");
+    setIsSearchMode(false);
+    setCurrentQuery(activeTab);
+
+    await fetchAllData(activeTab);
+  };
+
+  // 카테고리 클릭
+  const handleTabClick = async (tab: string) => {
+    setActiveTab(tab);
+
+    // 카테고리 클릭 시 검색 종료
+    setIsSearchMode(false);
+
+    setSearchQuery("");
+
+    await fetchAllData(tab);
   };
 
   if (!mounted || !isLoaded) return null;
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white p-3 md:p-8 font-sans selection:bg-blue-500/30 relative overflow-x-hidden">
-      {/* 로그인 영역 */}
+      {/* 로그인 */}
       <div className="max-w-6xl mx-auto flex justify-end items-center mb-4">
         {!isSignedIn ? (
           <SignInButton mode="modal">
@@ -176,6 +214,16 @@ export default function Home() {
               className="bg-transparent text-sm text-gray-300 focus:outline-none w-48 md:w-72 px-2"
             />
 
+            {isSearchMode && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="mr-2 text-gray-500 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            )}
+
             <button type="submit">
               <Search
                 size={18}
@@ -190,6 +238,9 @@ export default function Home() {
 
           <div className="px-4 py-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-sm font-bold">
             현재 검색: {currentQuery}
+            {isSearchMode && (
+              <span className="ml-2 text-xs text-gray-400">(검색 모드)</span>
+            )}
           </div>
         </div>
 
@@ -197,7 +248,7 @@ export default function Home() {
         <header className="flex flex-col items-center py-6 md:py-10">
           <div className="bg-blue-600/10 text-blue-500 text-[10px] font-black px-3 py-1 rounded mb-4 border border-blue-500/20 flex items-center gap-2 tracking-tighter uppercase">
             <Zap size={10} fill="currentColor" />
-            Semi-conductor Insight Provider
+            Insight Provider
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter italic mb-2 text-center uppercase">
@@ -214,9 +265,7 @@ export default function Home() {
 
         {/* AI 브리핑 */}
         <section className="mb-8 px-1">
-          <div className="bg-[#151518] rounded-3xl border border-gray-800 p-6 md:p-10 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 blur-[100px] -z-10 group-hover:bg-blue-600/10 transition-colors"></div>
-
+          <div className="bg-[#151518] rounded-3xl border border-gray-800 p-6 md:p-10">
             <div className="flex items-center gap-2 mb-6">
               <div className="bg-blue-600 p-2 rounded-lg">
                 <Lightbulb size={18} className="text-white" />
@@ -227,32 +276,26 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-2xl md:text-4xl font-black tracking-tighter italic text-white uppercase leading-tight">
-                {aiAnalysis.title}
-              </h2>
+            <h2 className="text-2xl md:text-4xl font-black tracking-tighter italic uppercase mb-4">
+              {aiAnalysis.title}
+            </h2>
 
-              <p className="text-gray-400 text-sm md:text-lg font-medium leading-relaxed max-w-3xl">
-                {aiAnalysis.content}
-              </p>
-            </div>
+            <p className="text-gray-400 text-sm md:text-lg leading-relaxed">
+              {aiAnalysis.content}
+            </p>
           </div>
         </section>
 
-        {/* 카테고리 탭 */}
+        {/* 카테고리 */}
         <div className="mb-10 max-w-xl mx-auto px-2">
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 justify-center">
             {["반도체", "2차전지", "AI/SW", "로봇", "자동차"].map((tab) => (
               <button
                 key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  setCurrentQuery(tab);
-                  setSearchQuery("");
-                }}
+                onClick={() => handleTabClick(tab)}
                 className={`px-6 py-3 rounded-xl text-[11px] font-black whitespace-nowrap transition-all uppercase tracking-tighter ${
-                  activeTab === tab
-                    ? "bg-white text-black scale-105 shadow-xl shadow-white/5"
+                  activeTab === tab && !isSearchMode
+                    ? "bg-white text-black scale-105"
                     : "bg-[#151518] text-gray-500 hover:text-gray-300"
                 }`}
               >
@@ -281,12 +324,13 @@ export default function Home() {
                     href={item.url || item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-blue-500/40 hover:scale-[1.01] transition-all cursor-pointer"
+                    className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-blue-500/40 hover:scale-[1.01] transition-all"
                   >
                     <h3
                       className="font-bold text-lg leading-relaxed"
                       dangerouslySetInnerHTML={{ __html: item.title }}
                     />
+
                     <p className="text-blue-500 text-sm mt-4">
                       기사 전문 보기 ↗
                     </p>
@@ -314,7 +358,7 @@ export default function Home() {
                   href={`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${item.rcept_no}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-red-500/40 hover:scale-[1.01] transition-all cursor-pointer"
+                  className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-red-500/40 hover:scale-[1.01] transition-all"
                 >
                   <div className="flex justify-between text-xs text-gray-500 mb-4">
                     <span>{item.corp_name}</span>
