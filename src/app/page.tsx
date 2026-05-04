@@ -53,7 +53,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
-
+const [isProOpen, setIsProOpen] = useState(false);
   const aiAnalysis = useMemo(() => {
     const allTitles = [
       ...news.map((n: any) => n.title || ""),
@@ -315,7 +315,9 @@ export default function Home() {
             </div>
 
             {/* 오른쪽 버튼 */}
-            <button className="bg-yellow-400 hover:bg-yellow-300 text-black font-black text-sm px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">
+            <button 
+            onClick={() => setIsProOpen(true)}
+            className="bg-yellow-400 hover:bg-yellow-300 text-black font-black text-sm px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">
               PRO 보기
             </button>
           </div>
@@ -412,6 +414,20 @@ export default function Home() {
           </div>
         </section>
       </div>
+      {isProOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+    <div className="bg-[#111114] border border-yellow-500/30 rounded-3xl w-[90%] max-w-md p-6 relative">
+
+      <button onClick={() => setIsProOpen(false)}>✕</button>
+
+      <h2>PRO</h2>
+      <p>AI 요약 / 수혜주 / 공시 알림</p>
+
+      <button>결제하기</button>
+
+    </div>
+  </div>
+)}
     </main>
   );
 }
