@@ -285,120 +285,39 @@ export default function Home() {
             </p>
           </div>
         </section>
-        {/* PRO PREMIUM SECTION */}
-        <section className="mb-12 max-w-6xl mx-auto px-2">
-          <div className="relative overflow-hidden rounded-3xl border border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 via-[#151518] to-[#151518] p-6 md:p-10 shadow-2xl">
-            {/* 배경 효과 */}
-            <div className="absolute top-0 right-0 w-72 h-72 bg-yellow-500/10 blur-[120px] rounded-full"></div>
+        {/* PRO MINI BANNER */}
+        <section className="mb-6 max-w-6xl mx-auto px-2">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-2xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/10 via-[#151518] to-[#151518] px-4 py-4 md:px-6 shadow-lg">
+            
+            {/* 왼쪽 */}
+            <div className="flex items-start md:items-center gap-3">
+              {/* 왕관 */}
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-xl">
+                👑
+              </div>
 
-            {/* 상단 */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 mb-10 relative z-10">
               {/* 텍스트 */}
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs font-black uppercase tracking-widest mb-4">
-                  👑 STOCKDATA PRO PREMIUM
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-yellow-400 text-xs font-black uppercase tracking-widest">
+                    STOCKDATA PRO
+                  </span>
+
+                  <span className="text-gray-500 text-xs">
+                    초고속 요약 · 주가 영향도 · 수혜주 추천 · VIP 공시
+                  </span>
                 </div>
 
-                <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-tight">
-                  뉴스보다 빠른 <span className="text-yellow-400">투자 판단</span>
-                </h2>
-
-                <p className="text-gray-400 mt-4 text-sm md:text-lg max-w-2xl leading-relaxed">
-                  AI 초고속 요약, 주가 영향도 점수, 관련 수혜주 추천,
-                  VIP 공시 알림까지. 중요한 정보만 더 빠르게 확인하세요.
+                <p className="text-sm md:text-base text-white font-bold mt-1">
+                  뉴스보다 빠른 투자 판단
                 </p>
-              </div>
-
-              {/* 가격 박스 */}
-              <div className="bg-black/30 border border-yellow-500/20 rounded-3xl p-6 min-w-[250px] text-center backdrop-blur-md">
-                <div className="text-gray-400 text-sm mb-2">
-                  월 구독
-                </div>
-
-                <div className="text-5xl font-black text-yellow-400">
-                  ₩4,900
-                </div>
-
-                <div className="text-xs text-gray-500 mt-2 leading-relaxed">
-                  AI 요약 + 주가 영향도 + 광고 제거
-                </div>
-
-                <button className="mt-5 w-full bg-yellow-400 hover:bg-yellow-300 text-black font-black py-3 rounded-2xl transition-all hover:scale-[1.02]">
-                  PRO 시작하기
-                </button>
               </div>
             </div>
 
-            {/* 기능 카드 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
-              {/* AI 요약 */}
-              <div className="bg-[#111114] border border-gray-800 rounded-3xl p-5 hover:border-yellow-500/40 transition-all hover:scale-[1.02]">
-                <div className="text-3xl mb-3">⚡</div>
-
-                <h3 className="font-black text-lg mb-2">
-                  AI 초고속 요약
-                </h3>
-
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  기사 핵심 3줄 요약 + 주가 영향도 점수
-                </p>
-
-                <div className="mt-4 text-yellow-400 text-xs font-bold uppercase">
-                  PRO 전용
-                </div>
-              </div>
-
-              {/* 수혜주 */}
-              <div className="bg-[#111114] border border-gray-800 rounded-3xl p-5 hover:border-yellow-500/40 transition-all hover:scale-[1.02]">
-                <div className="text-3xl mb-3">📈</div>
-
-                <h3 className="font-black text-lg mb-2">
-                  관련 수혜주 추천
-                </h3>
-
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  기사 기반 테마주 / 관련 종목 자동 추천
-                </p>
-
-                <div className="mt-4 text-yellow-400 text-xs font-bold uppercase">
-                  PRO 전용
-                </div>
-              </div>
-
-              {/* VIP 공시 */}
-              <div className="bg-[#111114] border border-gray-800 rounded-3xl p-5 hover:border-yellow-500/40 transition-all hover:scale-[1.02]">
-                <div className="text-3xl mb-3">🚨</div>
-
-                <h3 className="font-black text-lg mb-2">
-                  VIP 공시 알림
-                </h3>
-
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  즐겨찾기 종목 긴급 공시 실시간 속보
-                </p>
-
-                <div className="mt-4 text-yellow-400 text-xs font-bold uppercase">
-                  VIP 전용
-                </div>
-              </div>
-
-              {/* 광고 제거 */}
-              <div className="bg-[#111114] border border-gray-800 rounded-3xl p-5 hover:border-yellow-500/40 transition-all hover:scale-[1.02]">
-                <div className="text-3xl mb-3">🚀</div>
-
-                <h3 className="font-black text-lg mb-2">
-                  광고 제거 + 초고속
-                </h3>
-
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  광고 없이 더 빠른 뉴스 로딩 및 우선 속보 제공
-                </p>
-
-                <div className="mt-4 text-yellow-400 text-xs font-bold uppercase">
-                  PRO 전용
-                </div>
-              </div>
-            </div>
+            {/* 오른쪽 버튼 */}
+            <button className="bg-yellow-400 hover:bg-yellow-300 text-black font-black text-sm px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">
+              PRO 보기
+            </button>
           </div>
         </section>
         {/* 카테고리 */}
