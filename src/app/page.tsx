@@ -55,6 +55,8 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const cache = useRef<Record<string, any>>({});
 const [isProOpen, setIsProOpen] = useState(false);
+const [isProUser, setIsProUser] = useState(false);
+const [selectedNews, setSelectedNews] = useState<any | null>(null);
   const aiAnalysis = useMemo(() => {
     const allTitles = [
       ...news.map((n: any) => n.title || ""),
@@ -372,6 +374,10 @@ cache.current[query] = {
                     href={item.url || item.link}
                     target="_blank"
                     rel="noopener noreferrer"
+                   onClick={(e) => {
+  e.preventDefault();
+  setSelectedNews(item);
+}}
                     className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-blue-500/40 hover:scale-[1.01] transition-all"
                   >
                     <h3
@@ -388,6 +394,20 @@ cache.current[query] = {
                 <div className="text-gray-500">관련 뉴스 없음</div>
               )}
             </div>
+            {selectedNews && isProUser && (
+  <div>
+    <p>AI 요약: {selectedNews.title}</p>
+  </div>
+)}
+
+{selectedNews && !isProUser && (
+  <div>
+    <p>PRO 전용 기능입니다</p>
+    <button onClick={() => setIsProOpen(true)}>
+      PRO 시작하기
+    </button>
+  </div>
+)}
           </div>
 
           {/* 공시 */}
