@@ -375,7 +375,6 @@ cache.current[query] = {
                     target="_blank"
                     rel="noopener noreferrer"
                    onClick={(e) => {
-  e.preventDefault();
   setSelectedNews(item);
 }}
                     className="block bg-[#151518] border border-gray-800 rounded-3xl p-6 hover:border-blue-500/40 hover:scale-[1.01] transition-all"
