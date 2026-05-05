@@ -1,7 +1,7 @@
 "use client";
 
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   RefreshCcw,
   Zap,
@@ -53,6 +53,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const cache = useRef<Record<string, any>>({});
 const [isProOpen, setIsProOpen] = useState(false);
   const aiAnalysis = useMemo(() => {
     const allTitles = [
@@ -85,7 +86,13 @@ const [isProOpen, setIsProOpen] = useState(false);
   // 핵심 데이터 fetch
   const fetchAllData = useCallback(async (query: string) => {
     if (!query.trim()) return;
-
+    if (cache.current[query]) {
+  const cached = cache.current[query];
+  setNews(cached.news);
+  setDisclosures(cached.disclosures);
+  setCurrentQuery(query);
+  return;
+}
     setLoading(true);
 
     try {
@@ -120,7 +127,10 @@ const [isProOpen, setIsProOpen] = useState(false);
 
       setNews(filteredNews);
       setDisclosures(dartData.list?.slice(0, 12) || []);
-
+cache.current[query] = {
+  news: filteredNews,
+  disclosures: dartData.list?.slice(0, 12) || [],
+};
       // 실제 검색 기준 업데이트
       setCurrentQuery(query);
 
@@ -142,10 +152,10 @@ const [isProOpen, setIsProOpen] = useState(false);
 
     const interval = setInterval(() => {
       fetchAllData(queryToFetch);
-    }, 180000);
+    }, 900000);
 
     return () => clearInterval(interval);
-  }, [activeTab, currentQuery, isSearchMode, fetchAllData]);
+}, []);
 
   // 검색
   const handleSearch = async (e: React.FormEvent) => {
@@ -155,7 +165,9 @@ const [isProOpen, setIsProOpen] = useState(false);
 
     setIsSearchMode(true);
 
-    await fetchAllData(searchQuery.trim());
+    setTimeout(() => {
+  fetchAllData(searchQuery.trim());
+}, 500);
   };
 
   // 검색 해제 → 대표 카테고리 복귀
@@ -414,16 +426,39 @@ const [isProOpen, setIsProOpen] = useState(false);
           </div>
         </section>
       </div>
-      {isProOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-    <div className="bg-[#111114] border border-yellow-500/30 rounded-3xl w-[90%] max-w-md p-6 relative">
+     {isProOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div className="bg-[#111114] border border-yellow-500/30 rounded-3xl w-[95%] max-w-md p-6">
 
-      <button onClick={() => setIsProOpen(false)}>✕</button>
+      <button
+        onClick={() => setIsProOpen(false)}
+        className="text-white text-xl mb-4"
+      >
+        ✕
+      </button>
 
-      <h2>PRO</h2>
-      <p>AI 요약 / 수혜주 / 공시 알림</p>
+      <h2 className="text-white text-2xl font-bold mb-2">
+        🚀 STOCKDATA PRO
+      </h2>
 
-      <button>결제하기</button>
+      <p className="text-gray-400 text-sm mb-6">
+        뉴스보다 빠른 투자 판단을 경험하세요
+      </p>
+
+      <div className="bg-yellow-400 text-black text-center py-3 rounded-xl font-bold text-lg mb-6">
+        ₩4,900 / 월
+      </div>
+
+      <div className="space-y-3 text-sm text-gray-300 mb-6">
+        <div>⚡ AI 초고속 요약</div>
+        <div>📊 수혜주 자동 추천</div>
+        <div>🚨 VIP 공시 알림</div>
+        <div>🚀 광고 제거 + 속도 향상</div>
+      </div>
+
+      459 <button onClick={() => window.location.href = "/pro"} className="w-full bg-yellow-400 hover:bg-yellow-300 text-black py-3 rounded-xl font-bold">
+        PRO 시작하기
+      </button>
 
     </div>
   </div>
