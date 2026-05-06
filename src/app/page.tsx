@@ -369,11 +369,8 @@ cache.current[query] = {
             <div className="space-y-6">
               {news.length > 0 ? (
                 news.map((item, idx) => (
-                  <a
+                  <div
                     key={idx}
-                    href={item.url || item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
                    onClick={(e) => {
   setSelectedNews(item);
 }}
@@ -387,12 +384,62 @@ cache.current[query] = {
                     <p className="text-blue-500 text-sm mt-4">
                       기사 전문 보기 ↗
                     </p>
-                  </a>
+                  </div>
                 ))
               ) : (
                 <div className="text-gray-500">관련 뉴스 없음</div>
               )}
             </div>
+            {selectedNews && (
+  <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+    <div className="bg-[#111114] border border-yellow-500/20 rounded-3xl p-8 w-[90%] max-w-md">
+
+      <h2 className="text-2xl font-bold mb-4">
+        🧠 AI 요약 보기
+      </h2>
+
+      <p className="text-gray-400 mb-6">
+        선택한 기사를 AI가 핵심만 빠르게 요약해줍니다.
+      </p>
+
+      {!isProUser ? (
+        <div>
+          <p className="text-yellow-400 mb-4">
+            PRO 전용 기능입니다
+          </p>
+
+          <button
+            onClick={() => setIsProOpen(true)}
+            className="w-full bg-yellow-400 text-black py-3 rounded-xl font-bold"
+          >
+            PRO 시작하기
+          </button>
+        </div>
+      ) : (
+        <div>
+          <p className="text-white">
+            AI 요약: {selectedNews.title}
+          </p>
+        </div>
+      )}
+
+      <button
+        onClick={() => window.open(selectedNews.url || selectedNews.link)}
+        className="w-full mt-4 border border-gray-700 py-3 rounded-xl"
+      >
+        기사 원문 보기
+      </button>
+
+      <button
+        onClick={() => setSelectedNews(null)}
+        className="w-full mt-3 text-gray-500"
+      >
+        닫기
+      </button>
+
+    </div>
+  </div>
+)}
             {selectedNews && isProUser && (
   <div>
     <p>AI 요약: {selectedNews.title}</p>
