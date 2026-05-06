@@ -55,7 +55,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const cache = useRef<Record<string, any>>({});
 const [isProOpen, setIsProOpen] = useState(false);
-const [isProUser, setIsProUser] = useState(false);
+const [isProUser, setIsProUser] = useState(true);
 const [selectedNews, setSelectedNews] = useState<any | null>(null);
   const aiAnalysis = useMemo(() => {
   if (!selectedNews) return null;
