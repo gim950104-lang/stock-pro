@@ -58,28 +58,40 @@ const [isProOpen, setIsProOpen] = useState(false);
 const [isProUser, setIsProUser] = useState(false);
 const [selectedNews, setSelectedNews] = useState<any | null>(null);
   const aiAnalysis = useMemo(() => {
-    const allTitles = [
-      ...news.map((n: any) => n.title || ""),
-      ...disclosures.map((d: any) => d.report_nm || ""),
-    ].join(" ");
+  if (!selectedNews) return null;
 
-    const hotKeyword =
-      currentQuery ||
-      SEMI_KEYWORDS.find((kw) => allTitles.includes(kw)) ||
-      "핵심 산업";
+  const title = selectedNews.title || "";
 
-    const criticalCount = disclosures.filter((d: any) =>
-      isCriticalDisclosure(d.report_nm || "")
-    ).length;
+  let impact = "중립";
+  let keywords: string[] = [];
 
-    return {
-      title: `${hotKeyword} 중심의 시장 흐름 포착`,
-      content:
-        criticalCount > 0
-          ? `현재 ${hotKeyword} 분야에서 ${criticalCount}건의 주요 공시가 포착되었습니다. 공급계약·시설투자 여부를 체크하세요.`
-          : `현재 ${hotKeyword} 관련 핵심 뉴스와 공시를 분석 중입니다. 주요 시장 흐름을 확인하세요.`,
-    };
-  }, [news, disclosures, currentQuery]);
+  if (
+    title.includes("상승") ||
+    title.includes("급등") ||
+    title.includes("수혜")
+  ) {
+    impact = "긍정";
+  }
+
+  if (
+    title.includes("하락") ||
+    title.includes("급락") ||
+    title.includes("악재")
+  ) {
+    impact = "부정";
+  }
+
+  if (title.includes("반도체")) keywords.push("반도체");
+  if (title.includes("AI")) keywords.push("AI");
+  if (title.includes("삼성")) keywords.push("삼성");
+  if (title.includes("테슬라")) keywords.push("테슬라");
+
+  return {
+    summary: title.replace(/<[^>]*>?/gm, ""),
+    impact,
+    keywords,
+  };
+}, [selectedNews]);
 
   useEffect(() => {
     setMounted(true);
@@ -291,11 +303,11 @@ cache.current[query] = {
             </div>
 
             <h2 className="text-2xl md:text-4xl font-black tracking-tighter italic uppercase mb-4">
-              {aiAnalysis.title}
+              {aiAnalysis?.summary}
             </h2>
 
             <p className="text-gray-400 text-sm md:text-lg leading-relaxed">
-              {aiAnalysis.content}
+              {aiAnalysis?.impact}
             </p>
           </div>
         </section>
@@ -416,11 +428,49 @@ cache.current[query] = {
           </button>
         </div>
       ) : (
-        <div>
-          <p className="text-white">
-            AI 요약: {selectedNews.title}
-          </p>
-        </div>
+      <div className="mt-6 rounded-2xl border border-blue-500/30 bg-[#111827] p-5">
+  <h3 className="text-blue-400 font-bold text-lg mb-4">
+    🤖 AI 요약 분석
+  </h3>
+
+  <div className="space-y-3 text-sm">
+    <div>
+      <span className="text-gray-400">📌 핵심:</span>
+      <p className="text-white mt-1">
+        {aiAnalysis?.summary}
+      </p>
+    </div>
+
+    <div>
+      <span className="text-gray-400">📈 영향도:</span>
+      <p
+        className={`mt-1 font-bold ${
+          aiAnalysis?.impact === "긍정"
+            ? "text-green-400"
+            : aiAnalysis?.impact === "부정"
+            ? "text-red-400"
+            : "text-yellow-400"
+        }`}
+      >
+        {aiAnalysis?.impact}
+      </p>
+    </div>
+
+    <div>
+      <span className="text-gray-400">🎯 키워드:</span>
+      <div className="flex gap-2 flex-wrap mt-2">
+        {aiAnalysis?.keywords.map((kw: string) => (
+          <span
+            key={kw}
+            className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs"
+          >
+            #{kw}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
       )}
 
       <button
