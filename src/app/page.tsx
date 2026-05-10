@@ -162,21 +162,29 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white p-3 md:p-8 font-sans selection:bg-blue-500/30 relative overflow-x-hidden">
-      {/* 로그인 */}
-      <div className="max-w-6xl mx-auto flex justify-end items-center mb-4">
-        {!isSignedIn ? (
-          <SignInButton mode="modal">
-            <button
-              type="button"
-              className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-xl font-bold text-sm"
-            >
-              로그인 / 회원가입
-            </button>
-          </SignInButton>
-        ) : (
-          <UserButton />
-        )}
-      </div>
+      <div className="max-w-6xl mx-auto flex justify-end items-center gap-3 mb-4">
+
+  {!isSignedIn ? (
+    <SignInButton mode="modal">
+      <button
+        type="button"
+        className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-xl font-bold text-sm"
+      >
+        로그인 / 회원가입
+      </button>
+    </SignInButton>
+  ) : (
+    <UserButton />
+  )}
+
+  <button
+    onClick={() => window.location.href = "/pro"}
+    className="bg-[#151518] border border-yellow-500/20 hover:border-yellow-400 text-yellow-400 px-4 py-2 rounded-xl text-sm font-bold transition"
+  >
+    👑 PRO
+  </button>
+
+</div>
 
       <div className="max-w-6xl mx-auto">
         {/* 검색 */}
@@ -224,82 +232,157 @@ export default function Home() {
         </div>
 
         {/* 헤더 */}
-        <header className="flex flex-col items-center py-6 md:py-10">
-          <div className="bg-blue-600/10 text-blue-500 text-[10px] font-black px-3 py-1 rounded mb-4 border border-blue-500/20 flex items-center gap-2 tracking-tighter uppercase">
-            <Zap size={10} fill="currentColor" />
-            Insight Provider
-          </div>
+        
 
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter italic mb-2 text-center uppercase">
-            STOCKDATA <span className="text-blue-500">PRO</span>
-          </h1>
+        
 
-          <div className="flex items-center gap-2 text-gray-400 text-[11px] font-medium mt-2">
-            <RefreshCcw size={12} className={loading ? "animate-spin" : ""} />
-            {loading
-              ? `${currentQuery} 데이터 검색 중...`
-              : `실시간 업데이트: ${lastUpdated.toLocaleTimeString()}`}
-          </div>
-        </header>
-{/* PRO MINI BANNER */}
-<section className="mb-6 max-w-6xl mx-auto px-2">
-  <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-3xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+</div>
+<header className="flex flex-col items-center py-6 md:py-10">
 
-    {/* 왼쪽 */}
-    <div className="flex items-start md:items-center gap-3">
+  <div className="bg-blue-600/10 text-blue-500 text-[10px] font-black px-3 py-1 rounded mb-4 border border-blue-500/20 flex items-center gap-2 tracking-tighter uppercase">
+    <Zap size={10} fill="currentColor" />
+    Insight Provider
+  </div>
 
-      {/* 왕관 */}
-      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-xl">
-        👑
-      </div>
+  <h1 className="text-5xl md:text-7xl font-black tracking-tighter italic mb-2 text-center uppercase">
+    STOCKDATA <span className="text-blue-500">PRO</span>
+  </h1>
 
-      {/* 텍스트 */}
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-yellow-400 text-xs font-black uppercase tracking-widest">
-            STOCKDATA PRO
-          </span>
+  <div className="flex items-center gap-2 text-gray-400 text-[11px] font-medium mt-2">
+    <RefreshCcw
+      size={12}
+      className={loading ? "animate-spin" : ""}
+    />
 
-          <span className="text-gray-500 text-xs">
-            AI 요약 · 주가 영향도 · VIP 공시
-          </span>
-        </div>
+    {loading
+      ? `${currentQuery} 데이터 검색 중...`
+      : `실시간 업데이트: ${lastUpdated.toLocaleTimeString()}`}
+  </div>
 
-        <p className="text-sm md:text-base text-white font-bold mt-1">
-          뉴스보다 빠른 투자 판단
-        </p>
-      </div>
+</header>
+{/* AI 시황 브리핑 */}
+<div className="max-w-5xl mx-auto mb-10">
+  <div className="bg-[#151518] border border-blue-500/20 rounded-3xl p-6 md:p-8">
+
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse" />
+
+      <h2 className="text-2xl md:text-3xl font-black italic text-white">
+        AI MARKET BRIEFING
+      </h2>
     </div>
 
-    {/* 오른쪽 버튼 */}
-    <button
-      onClick={() => window.location.href = "/pro"}
-      className="bg-yellow-400 hover:bg-yellow-300 text-black px-5 py-3 rounded-2xl font-black text-sm transition-all"
-    >
-      PRO 시작하기
-    </button>
+    <div className="space-y-4 text-sm md:text-base text-gray-300 leading-relaxed">
+
+      <div>
+        • 현재{" "}
+        <span className="text-blue-400 font-bold">
+          {currentQuery}
+        </span>{" "}
+        시장에서는{" "}
+
+        {news.some((n) =>
+          (n.title || "").includes("HBM")
+        ) && (
+          <span className="text-green-400 font-bold">
+            HBM · 고대역폭 메모리
+          </span>
+        )}
+
+        {news.some((n) =>
+          (n.title || "").includes("엔비디아")
+        ) && (
+          <span className="text-yellow-400 font-bold">
+            {" "}· 엔비디아 공급망
+          </span>
+        )}
+
+        {news.some((n) =>
+          (n.title || "").includes("유리기판")
+        ) && (
+          <span className="text-cyan-400 font-bold">
+            {" "}· 유리기판
+          </span>
+        )}
+
+        {" "}관련 흐름이 강하게 감지되고 있습니다.
+      </div>
+
+      <div>
+        • 최근 기사 기준{" "}
+        <span className="text-red-400 font-bold">
+          AI 인프라 · 시설 투자 · 공급 계약
+        </span>{" "}
+        이슈가 시장 변동성을 확대시키고 있습니다.
+      </div>
+
+      <div>
+        • 단기 테마주보다{" "}
+        <span className="text-green-400 font-bold">
+          실적 기반 장비·소재 기업
+        </span>{" "}
+        중심으로 수급이 순환하는 흐름이 나타나고 있습니다.
+      </div>
+
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+
+      <div className="bg-[#0f0f12] border border-gray-800 rounded-2xl p-4">
+        <div className="text-gray-500 text-xs mb-2">핵심 키워드</div>
+
+        <div className="text-blue-400 font-black text-lg">
+          {
+            news.some((n) =>
+              (n.title || "").includes("HBM")
+            )
+              ? "HBM"
+              : "AI 반도체"
+          }
+        </div>
+      </div>
+
+      <div className="bg-[#0f0f12] border border-gray-800 rounded-2xl p-4">
+        <div className="text-gray-500 text-xs mb-2">시장 분위기</div>
+
+        <div className="text-yellow-400 font-black text-lg">
+          {
+            news.length >= 10
+              ? "과열"
+              : "관심 확대"
+          }
+        </div>
+      </div>
+
+      <div className="bg-[#0f0f12] border border-gray-800 rounded-2xl p-4">
+        <div className="text-gray-500 text-xs mb-2">핫 테마</div>
+
+        <div className="text-green-400 font-black text-lg">
+          {
+            news.some((n) =>
+              (n.title || "").includes("유리기판")
+            )
+              ? "유리기판"
+              : "반도체"
+          }
+        </div>
+      </div>
+
+      <div className="bg-[#0f0f12] border border-gray-800 rounded-2xl p-4">
+        <div className="text-gray-500 text-xs mb-2">현재 흐름</div>
+
+        <div className="text-red-400 font-black text-lg">
+          {
+            disclosures.length >= 8
+              ? "공시 증가"
+              : "관망"
+          }
+        </div>
+      </div>
+
+    </div>
 
   </div>
-</section>
-        {/* 카테고리 */}
-        <div className="mb-10 max-w-xl mx-auto px-2">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 justify-center">
-            {["반도체", "2차전지", "AI/SW", "로봇", "자동차"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabClick(tab)}
-                className={`px-6 py-3 rounded-xl text-[11px] font-black whitespace-nowrap transition-all uppercase tracking-tighter ${
-                  activeTab === tab && !isSearchMode
-                    ? "bg-white text-black scale-105"
-                    : "bg-[#151518] text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* 뉴스 + 공시 */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 pb-24">
           {/* 뉴스 */}
