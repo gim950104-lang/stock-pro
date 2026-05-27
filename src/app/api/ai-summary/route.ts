@@ -64,6 +64,8 @@ export async function POST(req: Request) {
 ${body.content}
 `;
 
+    console.log("GEMINI API 호출됨");
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -111,14 +113,22 @@ ${body.content}
     }
 
     // 4. 새 요약 DB 저장
-    await supabase.from("ai_summaries").insert({
-      article_url: body.url,
+    const { error: insertError } = await supabase
+      .from("ai_summaries")
+      .insert({
+        article_url: body.url,
+        summary,
+      });
+
+    if (insertError) {
+      console.log("DB 저장 오류:", insertError);
+    } else {
+      console.log("새 요약 저장 완료");
+    }
+
+    return NextResponse.json({
       summary,
     });
-
-    console.log("새 요약 저장 완료");
-
-    return NextResponse.json({ summary });
 
   } catch (error) {
     console.log("AI ERROR:", error);
