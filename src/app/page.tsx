@@ -2,6 +2,7 @@
 
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "../lib/supabase";
 import {
   RefreshCcw,
   Zap,
@@ -33,13 +34,36 @@ const isCriticalDisclosure = (name: string) => {
 };
 
 export default function Home() {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
+  useEffect(() => {
+  const checkPro = async () => {
+    if (!isSignedIn || !user) {
+  setIsPro(false);
+  return;
+}
+    const { data } = await supabase
+      .from("users")
+      .select("is_pro")
+      .eq("clerk_id", user?.id)
+      .maybeSingle()
+console.log(data);
+    if (data?.is_pro) {
+     setIsPro(data?.is_pro === true);
+    }
+  };
+
+  if (user?.id) {
+    checkPro();
+  }
+}, [isSignedIn, user]);
 
   const [activeTab, setActiveTab] = useState("반도체");
   const [currentQuery, setCurrentQuery] = useState("반도체");
   const [isSearchMode, setIsSearchMode] = useState(false);
 
   const [news, setNews] = useState<any[]>([]);
+  const [isPro, setIsPro] = useState(false);
+  console.log("현재 isPro 상태:", isPro);
   const [disclosures, setDisclosures] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -48,7 +72,52 @@ export default function Home() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNews, setSelectedNews] = useState<any | null>(null);
+  const [aiSummary, setAiSummary] = useState("");
+const [aiLoading, setAiLoading] = useState(false);
+const generateAiSummary = async (
+  content: string,
+  url: string
+) => {
+  if (!isSignedIn) {
+  window.location.href = "/sign-in";
+  return;
+}
 
+if (!isPro) {
+  window.location.href = "/pricing";
+  return;
+}
+  try {
+    setAiLoading(true);
+    setAiSummary("");
+   
+
+    const response = await fetch("/api/ai-summary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+  content,
+  url,
+}),
+    });
+
+    if (!response.ok) {
+  setAiSummary("AI 요약 서버 오류");
+  return;
+}
+
+const data = await response.json();
+
+
+setAiSummary(data.summary || "요약 결과 없음");
+  } catch (error) {
+    setAiSummary("AI 요약 생성 실패");
+  } finally {
+    setAiLoading(false);
+  }
+};
   const cache = useRef<Record<string, any>>({});
 
   useEffect(() => {
@@ -157,11 +226,13 @@ export default function Home() {
 
     await fetchAllData(tab);
   };
+  const tabs = ["반도체", "AI", "2차전지", "자동차"];
 
   if (!mounted || !isLoaded) return null;
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white p-3 md:p-8 font-sans selection:bg-blue-500/30 relative overflow-x-hidden">
+   
       <div className="max-w-6xl mx-auto flex justify-end items-center gap-3 mb-4">
 
   {!isSignedIn ? (
@@ -383,6 +454,25 @@ export default function Home() {
     </div>
 
   </div>
+  <div>
+ <div className="flex justify-center mt-10 mb-14">
+  <div className="flex gap-4 bg-[#111114] border border-blue-500/20 rounded-2xl px-5 py-4 shadow-[0_0_30px_rgba(59,130,246,0.08)]">
+    {tabs.map((tab) => (
+      <button
+        key={tab}
+        onClick={() => handleTabClick(tab)}
+        className={`px-6 py-3 rounded-xl transition-all duration-300 font-semibold ${
+          currentQuery === tab
+            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+            : "bg-[#0a0a0c] text-gray-300 hover:bg-[#16161a]"
+        }`}
+      >
+        {tab}
+      </button>
+    ))}
+  </div>
+</div>
+</div>
         {/* 뉴스 + 공시 */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 pb-24">
           {/* 뉴스 */}
@@ -429,20 +519,56 @@ export default function Home() {
                   </p>
 
                   <button
-                    onClick={() =>
-                      window.open(selectedNews.url || selectedNews.link)
-                    }
-                    className="w-full mt-4 border border-gray-700 py-3 rounded-xl"
-                  >
-                    기사 원문 보기
-                  </button>
+  onClick={() => {
+    if (!isPro) {
+      window.location.href = "/pro";
+      return;
+    }
+
+    generateAiSummary(
+  selectedNews.content || selectedNews.description,
+  selectedNews.url
+);
+  }}
+  className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold mb-3"
+>
+  🤖 AI 요약 보기 (PRO)
+</button>
+
+<button
+  onClick={() => {
+  if (!isSignedIn) {
+    window.location.href = "/sign-in";
+    return;
+  }
+
+  window.open(selectedNews?.url, "_blank");
+}}
+  className="w-full mt-4 border border-gray-700 py-3 rounded-xl"
+>
+  기사 원문 보기
+</button>
 
                   <button
-                    onClick={() => setSelectedNews(null)}
+                    onClick={() => {
+  setSelectedNews(null);
+  setAiSummary("");
+}}
                     className="w-full mt-3 text-gray-500"
                   >
                     닫기
                   </button>
+                  {aiLoading && (
+  <div className="mt-4 text-center text-blue-400">
+    AI가 뉴스 분석 중입니다...
+  </div>
+)}
+
+{aiSummary && (
+  <div className="mt-4 max-h-[400px] overflow-y-auto rounded-xl border border-blue-500/30 bg-[#111827] p-5 text-sm leading-7 text-gray-200 whitespace-pre-wrap">
+    {aiSummary}
+  </div>
+)}
                 </div>
               </div>
             )}
@@ -483,6 +609,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        
       </div>
     </main>
   );
