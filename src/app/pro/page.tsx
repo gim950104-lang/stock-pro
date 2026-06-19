@@ -144,27 +144,34 @@ export default function ProPage() {
         <div className="max-w-md mx-auto bg-[#111114] border border-yellow-500/30 rounded-3xl p-8">
 
           <h2 className="text-3xl font-bold mb-4 text-center">
-            🚀 STOCKDATA PRO
+            🚀 STOCKDATA BETA
           </h2>
 
           <p className="text-gray-400 text-center mb-8">
-            PRO 기능을 활성화하고 더 빠르게 투자하세요
+           현재 PRO 기능을 개발 중입니다.
+AI 요약 기능을 먼저 체험해보세요.
           </p>
 
-          <div className="bg-yellow-400 text-black text-center py-4 rounded-2xl font-bold text-3xl mb-6">
-            ₩4,900 / 월
-          </div>
+          
+          <div className="bg-zinc-800 rounded-2xl p-5 text-center">
+  <p className="text-lg font-bold mb-2">
+    🚧 PRO 기능 개발 중
+  </p>
 
-          <button
-            onClick={handlePay}
-            disabled={loading}
-            className="w-full bg-yellow-400 hover:bg-yellow-300 transition text-black font-bold py-4 rounded-2xl text-lg"
-          >
-            {loading
-              ? "결제 진행중..."
-              : "결제 진행하기"}
-          </button>
+  <p className="text-gray-400">
+    현재 사용자 피드백을 수집하고 있습니다.
+  </p>
 
+  <p className="text-green-400 font-bold mt-4">
+  gim950104@gmail.com
+  </p>
+</div>
+<button
+  onClick={() => router.push("/")}
+  className="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-2xl font-bold"
+>
+  ← 홈으로 돌아가기
+</button>
         </div>
 
       </section>

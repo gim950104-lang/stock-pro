@@ -74,6 +74,24 @@ console.log(data);
   const [selectedNews, setSelectedNews] = useState<any | null>(null);
   const [aiSummary, setAiSummary] = useState("");
 const [aiLoading, setAiLoading] = useState(false);
+const [summaryCount, setSummaryCount] = useState(0);
+useEffect(() => {
+  const loadSummaryCount = async () => {
+    if (!user?.id) return;
+
+    const { data } = await supabase
+      .from("users")
+      .select("summary_count")
+      .eq("clerk_id", user.id)
+      .single();
+
+    if (data) {
+      setSummaryCount(data.summary_count || 0);
+    }
+  };
+
+  loadSummaryCount();
+}, [user?.id]);
 const generateAiSummary = async (
   content: string,
   url: string
@@ -82,11 +100,12 @@ const generateAiSummary = async (
   window.location.href = "/sign-in";
   return;
 }
-
-if (!isPro) {
-  window.location.href = "/pricing";
+console.log("현재 summaryCount =", summaryCount);
+if (!isPro && summaryCount >= 3) {
+  window.location.href = "/pro";
   return;
 }
+
   try {
     setAiLoading(true);
     setAiSummary("");
@@ -112,6 +131,19 @@ const data = await response.json();
 
 
 setAiSummary(data.summary || "요약 결과 없음");
+
+const newCount = summaryCount + 1;
+
+setSummaryCount(newCount);
+
+await supabase
+  .from("users")
+  .update({ summary_count: newCount })
+  .eq("clerk_id", user.id);
+
+if (!isPro && newCount >= 3) {
+  window.location.href = "/pro";
+}
   } catch (error) {
     setAiSummary("AI 요약 생성 실패");
   } finally {
@@ -520,10 +552,7 @@ setAiSummary(data.summary || "요약 결과 없음");
 
                   <button
   onClick={() => {
-    if (!isPro) {
-      window.location.href = "/pro";
-      return;
-    }
+    
 
     generateAiSummary(
   selectedNews.content || selectedNews.description,
@@ -532,9 +561,11 @@ setAiSummary(data.summary || "요약 결과 없음");
   }}
   className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold mb-3"
 >
-  🤖 AI 요약 보기 (PRO)
+🧠 AI 요약 보기 (남은 {Math.max(0, 3 - summaryCount)}회)
 </button>
-
+<p className="text-xs text-gray-500 mt-2 text-center">
+  🚧 PRO 기능은 현재 개발 중입니다.
+</p>
 <button
   onClick={() => {
   if (!isSignedIn) {
