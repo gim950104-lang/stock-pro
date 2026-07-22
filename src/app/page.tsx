@@ -92,12 +92,14 @@ useEffect(() => {
   const loadSummaryCount = async () => {
     if (!user?.id) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
+    
       .from("users")
       .select("summary_count")
       .eq("clerk_id", user.id)
       .single();
-
+console.log("loadSummaryCount data =", data);
+console.log("loadSummaryCount error =", error);
     if (data) {
       setSummaryCount(data.summary_count || 0);
     }
