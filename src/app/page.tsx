@@ -48,7 +48,7 @@ await supabase
       clerk_id: user.id,
       email: user.primaryEmailAddress?.emailAddress,
       is_pro: false,
-      summary_count: 0,
+      
     },
     {
       onConflict: "clerk_id",
