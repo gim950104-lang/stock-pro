@@ -109,6 +109,8 @@ const generateAiSummary = async (
   content: string,
   url: string
 ) => {
+  console.log("user.id =", user?.id);
+console.log("summaryCount =", summaryCount);
   if (!isSignedIn) {
   window.location.href = "/sign-in";
   return;
