@@ -82,7 +82,24 @@ console.log(data);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [mounted, setMounted] = useState(false);
+const [favorites, setFavorites] = useState<string[]>([]);
+const [isFavorite, setIsFavorite] = useState(false);
+const removeFavorite = async (stock: string) => {
+  if (!user?.id) return;
 
+  const { error } = await supabase
+    .from("favorite_stocks")
+    .delete()
+    .eq("clerk_id", user.id)
+    .eq("stock_name", stock);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setFavorites((prev) => prev.filter((item) => item !== stock));
+};
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNews, setSelectedNews] = useState<any | null>(null);
   const [aiSummary, setAiSummary] = useState("");
@@ -172,7 +189,25 @@ if (!isPro && newCount >= 3) {
   useEffect(() => {
     setMounted(true);
   }, []);
+useEffect(() => {
+  if (!user?.id) return;
+console.log("user:", user);
+  const loadFavorites = async () => {
+    const { data, error } = await supabase
+      .from("favorite_stocks")
+      .select("stock_name")
+      .eq("clerk_id", user.id);
 
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setFavorites(data.map(item => item.stock_name));
+  };
+
+  loadFavorites();
+}, [user]);
   const fetchAllData = useCallback(async (query: string) => {
     if (!query.trim()) return;
 
@@ -341,6 +376,32 @@ if (!isPro && newCount >= 3) {
                 }
               />
             </button>
+            <button
+  type="button"
+  onClick={async () => {
+    if (!isSignedIn) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("favorite_stocks")
+      .insert({
+        clerk_id: user?.id,
+        stock_name: currentQuery,
+      });
+
+    if (error) {
+  console.log(error);
+  alert(JSON.stringify(error));
+} else {
+  alert(`${currentQuery} 즐겨찾기 완료!`);
+}
+  }}
+  className="ml-2 px-3 py-2 rounded-full bg-[#1b1b20] border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 transition"
+>
+  ⭐
+</button>
           </form>
 
           <div className="px-4 py-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-sm font-bold">
@@ -350,7 +411,37 @@ if (!isPro && newCount >= 3) {
             )}
           </div>
         </div>
+{favorites.length > 0 && (
+  <div className="mt-3 flex flex-wrap gap-2">
+    {favorites.map((stock) => (
+  <div key={stock} className="flex items-center gap-1">
+    <button
+      onClick={() => fetchAllData(stock)}
+      className="px-3 py-1 rounded-full bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-sm"
+    >
+      ⭐ {stock}
+    </button>
 
+    <button
+  onClick={() => removeFavorite(stock)}
+  className="
+    ml-1
+    flex items-center justify-center
+    w-6 h-6
+    rounded-full
+    bg-white/10
+    text-gray-300
+    hover:bg-red-500
+    hover:text-white
+    transition-all duration-200
+  "
+>
+  ✕
+</button>
+  </div>
+))}
+  </div>
+)}
         {/* 헤더 */}
         
 
@@ -585,11 +676,6 @@ if (!isPro && newCount >= 3) {
 </p>
 <button
   onClick={() => {
-  if (!isSignedIn) {
-    window.location.href = "/sign-in";
-    return;
-  }
-
   window.open(selectedNews?.url, "_blank");
 }}
   className="w-full mt-4 border border-gray-700 py-3 rounded-xl"
