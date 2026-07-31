@@ -601,7 +601,7 @@ console.log("user:", user);
       <button
         key={tab}
         onClick={() => handleTabClick(tab)}
-        className={`px-6 py-3 rounded-xl transition-all duration-300 font-semibold ${
+        className={`px-3 md:px-6 py-2 md:py-3 rounded-xl transition-all duration-300 font-semibold text-sm md:text-base ${
           currentQuery === tab
             ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
             : "bg-[#0a0a0c] text-gray-300 hover:bg-[#16161a]"
