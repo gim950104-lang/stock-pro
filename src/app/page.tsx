@@ -175,9 +175,7 @@ await supabase
   .update({ summary_count: newCount })
   .eq("clerk_id", user.id);
 
-if (!isPro && newCount >= 3) {
-  window.location.href = "/pro";
-}
+
   } catch (error) {
     setAiSummary("AI 요약 생성 실패");
   } finally {
@@ -235,23 +233,69 @@ console.log("user:", user);
       const q = query.toLowerCase().trim();
 
       const filteredNews =
-        newsData.articles
-          ?.filter((item: any) => {
-            const title = (item.title || "").toLowerCase();
-            const desc = (item.description || "").toLowerCase();
+  newsData.articles
+    ?.filter((item: any) => {
+      const title = (item.title || "").toLowerCase();
+      const desc = (item.description || "").toLowerCase();
 
-            return title.includes(q) || desc.includes(q);
-          })
-          ?.sort((a: any, b: any) => {
-            const aTitle = (a.title || "").toLowerCase();
-            const bTitle = (b.title || "").toLowerCase();
+      return title.includes(q) || desc.includes(q);
+    })
+    ?.map((item: any) => {
+      const text = `${item.title || ""} ${item.description || ""}`;
 
-            const aExact = aTitle.includes(q) ? 1 : 0;
-            const bExact = bTitle.includes(q) ? 1 : 0;
+      let score = 0;
 
-            return bExact - aExact;
-          })
-          ?.slice(0, 12) || [];
+      const importantWords = [
+        "공급계약",
+        "수주",
+        "시설투자",
+        "증설",
+        "실적",
+        "영업이익",
+        "신제품",
+        "양산",
+        "투자",
+        "계약",
+        "인수",
+        "합병",
+        "개발",
+        "출시",
+        "돌파",
+        "사상 최대",
+      ];
+
+      const hotWords = [
+        "급등",
+        "급락",
+        "논란",
+        "쟁점",
+        "갈등",
+        "충격",
+        "폭증",
+        "폭락",
+        "사상 최대",
+        "핵심",
+        "독점",
+      ];
+
+      importantWords.forEach((word) => {
+        if (text.includes(word)) score += 2;
+      });
+
+      hotWords.forEach((word) => {
+        if (text.includes(word)) score += 3;
+      });
+
+      return {
+        ...item,
+        importanceScore: score,
+        isHot: score >= 3,
+      };
+    })
+    ?.sort((a: any, b: any) => {
+      return (b.importanceScore || 0) - (a.importanceScore || 0);
+    })
+    ?.slice(0, 12) || [];
 
       setNews(filteredNews);
       setDisclosures(dartData.list?.slice(0, 12) || []);
@@ -634,8 +678,13 @@ console.log("user:", user);
                   >
                     <h3
                       className="font-bold text-lg leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: item.title }}
-                    />
+                      >
+  {item.isHot && (
+    <span className="text-red-500 mr-2">🔥</span>
+  )}
+
+  <span dangerouslySetInnerHTML={{ __html: item.title }} />
+</h3>
 
                     <p className="text-blue-500 text-sm mt-4">
                       기사 전문 보기 ↗
